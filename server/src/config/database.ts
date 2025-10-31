@@ -1,13 +1,16 @@
-import mongoose from 'mongoose';
+import { Pool } from 'pg';
 import { env } from './env.js';
 
+export const pool = new Pool({ connectionString: env.DATABASE_URL });
+
 export async function connectToDatabase(): Promise<void> {
-  if (mongoose.connection.readyState === 1) return;
-  await mongoose.connect(env.MONGODB_URI, {
-    dbName: undefined
-  });
-  // eslint-disable-next-line no-console
-  console.log('Conectado a MongoDB');
+  const client = await pool.connect();
+  try {
+    const result = await client.query('SELECT 1');
+    if (result.rowCount !== 1) throw new Error('Conexión a PostgreSQL no verificada');
+    // eslint-disable-next-line no-console
+    console.log('Conectado a PostgreSQL');
+  } finally {
+    client.release();
+  }
 }
-
-

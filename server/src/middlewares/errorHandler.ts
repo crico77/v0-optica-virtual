@@ -1,10 +1,21 @@
 import { NextFunction, Request, Response } from 'express';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
-  const status = 500;
-  const message = err instanceof Error ? err.message : 'Error interno del servidor';
-  res.status(status).json({ error: message });
+  // eslint-disable-next-line no-console
+  console.error('Error:', err);
+
+  if (err instanceof Error) {
+    if (err.message.includes('violates foreign key constraint')) {
+      res.status(400).json({ error: 'Referencia inválida. El recurso relacionado no existe' });
+      return;
+    }
+    if (err.message.includes('duplicate key value')) {
+      res.status(409).json({ error: 'El recurso ya existe' });
+      return;
+    }
+    res.status(500).json({ error: err.message });
+    return;
+  }
+
+  res.status(500).json({ error: 'Error interno del servidor' });
 }
-
-
